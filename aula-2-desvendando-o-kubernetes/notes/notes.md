@@ -34,7 +34,7 @@
 
   * **Definição**
 
-    * Formado por 1 *cluster* (conjunto de máquinas), nos quais cada máquina exerce um panel (**Control Plane** ou **Node**)
+    * Formado por 1 *cluster* (conjunto de máquinas), nos quais cada máquina exerce um papel (**Control Plane** ou **Node**)
     
     * **Node**: responsável pela execução dos containers das aplicações
 
