@@ -1,0 +1,59 @@
+name: CI-CD
+
+on:
+  push:
+    branches: [ master ]
+
+  workflow_dispatch:
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Docker Login
+        uses: docker/login-action@v1.10.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_PWD }}
+      
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v2.6.1
+        with:
+          context: ./src
+          file: ./src/Dockerfile
+          push: true
+          tags: |
+            imgabreuw/rotten-potatoes:latest
+            imgabreuw/rotten-potatoes:${{ github.run_number }}
+  
+  CD:
+    needs: [CI]
+    runs-on: ubuntu-latest
+      
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Kubernetes set context
+        uses: Azure/k8s-set-context@v1.1
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.K8S_CONFIG }}
+          
+      - name: Deploy Mongo
+        uses: Azure/k8s-deploy@v1
+        with:
+          manifests: |
+            k8s/mongodb/deployment.yml
+            k8s/mongodb/service.yml
+      
+      - name: Deploy Web
+        uses: Azure/k8s-deploy@v1
+        with:
+          manifests: |
+            k8s/web/deployment.yml
+          images: imgabreuw/rotten-potatoes:${{ github.run_number }}
+            
+      
